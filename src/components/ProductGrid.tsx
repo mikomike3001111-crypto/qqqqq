@@ -29,11 +29,20 @@ export default function ProductGrid({ category, searchQuery }: ProductGridProps)
       let query = supabase
         .from('products')
         .select('*')
-        .eq('in_stock', true)
-        .order('sort_order', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (category !== 'all') {
-        query = query.eq('category', category);
+        const { data: categoryData, error: catError } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('name', category.charAt(0).toUpperCase() + category.slice(1))
+          .maybeSingle();
+
+        if (catError) throw catError;
+
+        if (categoryData) {
+          query = query.eq('category_id', categoryData.id);
+        }
       }
 
       const { data, error } = await query;
@@ -41,15 +50,7 @@ export default function ProductGrid({ category, searchQuery }: ProductGridProps)
       if (error) throw error;
 
       setProducts(data || []);
-
-      const uniqueSubcategories = [
-        ...new Set(
-          (data || [])
-            .map((p) => p.subcategory)
-            .filter((s): s is string => s !== null)
-        ),
-      ];
-      setSubcategories(uniqueSubcategories);
+      setSubcategories([]);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -59,35 +60,31 @@ export default function ProductGrid({ category, searchQuery }: ProductGridProps)
 
   let filteredProducts = products;
 
-  if (selectedSubcategory !== 'all') {
-    filteredProducts = filteredProducts.filter((p) => p.subcategory === selectedSubcategory);
-  }
-
   if (searchQuery && searchQuery.trim() !== '') {
     const query = searchQuery.toLowerCase();
     filteredProducts = filteredProducts.filter(
       (p) =>
         p.name.toLowerCase().includes(query) ||
-        (p.subcategory && p.subcategory.toLowerCase().includes(query)) ||
-        (p.description && p.description.toLowerCase().includes(query))
+        (p.description && p.description.toLowerCase().includes(query)) ||
+        (p.color && p.color.toLowerCase().includes(query))
     );
   }
 
   filteredProducts = filteredProducts.filter(
-    (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
+    (p) => (p.price || 0) >= priceRange[0] && (p.price || 0) <= priceRange[1]
   );
 
   filteredProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return a.price - b.price;
+        return (a.price || 0) - (b.price || 0);
       case 'price-high':
-        return b.price - a.price;
+        return (b.price || 0) - (a.price || 0);
       case 'newest':
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       case 'featured':
       default:
-        return (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.sort_order - b.sort_order;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     }
   });
 
@@ -161,33 +158,6 @@ export default function ProductGrid({ category, searchQuery }: ProductGridProps)
           </div>
         )}
 
-        {subcategories.length > 0 && (
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setSelectedSubcategory('all')}
-              className={`px-4 py-2 text-sm border rounded transition-all ${
-                selectedSubcategory === 'all'
-                  ? 'border-black bg-black text-white'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              All
-            </button>
-            {subcategories.map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setSelectedSubcategory(sub)}
-                className={`px-4 py-2 text-sm border rounded transition-all ${
-                  selectedSubcategory === sub
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {filteredProducts.length === 0 ? (

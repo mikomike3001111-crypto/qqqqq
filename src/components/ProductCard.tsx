@@ -10,15 +10,15 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || '');
-  const [selectedColor, setSelectedColor] = useState<string>(product.colors[0] || '');
+  const [selectedSize, setSelectedSize] = useState<string>(product.size || '');
+  const [selectedColor, setSelectedColor] = useState<string>(product.color || '');
   const [isHovering, setIsHovering] = useState(false);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const handleAddToCart = async () => {
     try {
-      await addToCart(product, 1, selectedSize, selectedColor);
+      await addToCart(product, 1, selectedSize || product.size || '', selectedColor || product.color || '');
       alert('Added to cart!');
     } catch (error) {
       alert('Failed to add to cart');
@@ -37,8 +37,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleOrder = () => {
     const whatsappLink = generateWhatsAppLink(
       product.name,
-      selectedSize,
-      selectedColor
+      selectedSize || product.size || '',
+      selectedColor || product.color || ''
     );
     window.open(whatsappLink, '_blank');
   };
@@ -84,10 +84,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {product.name}
               </h3>
               <div className="flex items-center justify-between">
-                <span className="text-xl font-bold">KSh {product.price.toLocaleString()}</span>
-                {!product.in_stock && (
-                  <span className="text-xs bg-red-500 px-2 py-1 rounded">Out of Stock</span>
-                )}
+                <span className="text-xl font-bold">KSh {(product.price || 0).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -99,58 +96,31 @@ export default function ProductCard({ product }: ProductCardProps) {
           <h3 className="font-medium text-lg text-gray-900 line-clamp-2">
             {product.name}
           </h3>
-          {product.subcategory && (
+          {product.color && (
             <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">
-              {product.subcategory}
+              {product.color}
             </p>
           )}
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold">KSh {product.price.toLocaleString()}</span>
-          {!product.in_stock && (
-            <span className="text-xs text-red-600 font-medium">Out of Stock</span>
-          )}
+          <span className="text-xl font-bold">KSh {(product.price || 0).toLocaleString()}</span>
         </div>
 
-        {product.colors.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-700">Color:</p>
-            <div className="flex gap-2 flex-wrap">
-              {product.colors.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setSelectedColor(color)}
-                  className={`px-3 py-1 text-xs border rounded transition-all ${
-                    selectedColor === color
-                      ? 'border-black bg-black text-white'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  {color}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {product.sizes.length > 0 && (
+        {product.size && (
           <div className="space-y-2">
             <p className="text-xs font-medium text-gray-700">Size:</p>
             <div className="flex gap-2 flex-wrap">
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={`px-3 py-1 text-xs border rounded transition-all ${
-                    selectedSize === size
-                      ? 'border-black bg-black text-white'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
+              <button
+                onClick={() => setSelectedSize(product.size || '')}
+                className={`px-3 py-1 text-xs border rounded transition-all ${
+                  selectedSize === product.size
+                    ? 'border-black bg-black text-white'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                {product.size}
+              </button>
             </div>
           </div>
         )}
@@ -158,16 +128,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="grid grid-cols-2 gap-2 mt-4">
           <button
             onClick={handleAddToCart}
-            disabled={!product.in_stock}
-            className="py-3 bg-black text-white font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed rounded flex items-center justify-center gap-2"
+            className="py-3 bg-black text-white font-medium hover:bg-gray-800 transition-colors rounded flex items-center justify-center gap-2"
           >
             <ShoppingBag className="w-4 h-4" />
             Add to Cart
           </button>
           <button
             onClick={handleOrder}
-            disabled={!product.in_stock}
-            className="py-3 bg-green-500 text-white font-medium hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed rounded"
+            className="py-3 bg-green-500 text-white font-medium hover:bg-green-600 transition-colors rounded"
           >
             WhatsApp
           </button>

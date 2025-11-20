@@ -12,18 +12,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface Product {
   id: string;
   name: string;
-  category: 'men' | 'women' | 'unisex';
-  subcategory: string | null;
+  category_id: string;
   description: string | null;
   price: number;
-  colors: string[];
-  sizes: string[];
+  color: string | null;
+  size: string | null;
   image_url: string | null;
-  featured: boolean;
-  in_stock: boolean;
-  sort_order: number;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Category {

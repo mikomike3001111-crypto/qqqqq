@@ -1,9 +1,6 @@
 import { useState } from 'react';
-import { AdminAuthProvider } from './contexts/AdminAuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminDashboard from './pages/AdminDashboard';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeaturedCollections from './components/FeaturedCollections';
@@ -20,7 +17,6 @@ function App() {
   const [currentCategory, setCurrentCategory] = useState<string>('all');
   const [showHero, setShowHero] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [showAdmin, setShowAdmin] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
 
@@ -37,20 +33,6 @@ function App() {
       setShowHero(false);
     }
   };
-
-  if (window.location.pathname === '/admin') {
-    setShowAdmin(true);
-  }
-
-  if (showAdmin) {
-    return (
-      <AdminAuthProvider>
-        <ProtectedRoute>
-          <AdminDashboard />
-        </ProtectedRoute>
-      </AdminAuthProvider>
-    );
-  }
 
   return (
     <CartProvider>
